@@ -16,9 +16,10 @@ const statusIcons = {
 
 const rules = [
   "You must click to join and accept the terms and conditions in order to participate.",
-  "Create and post videos with <strong>#MVP</strong>! High-quality and topic-related posts could get the reward!",
+  "Create and post videos with #MVP! High-quality and topic-related posts could get the reward!",
   "Accounts must be registered in the US to participate.",
-  "All qualifying videos must include the contest hashtags <strong>#MVP</strong> and in the video caption",
+  "All qualifying videos must include the contest hashtags #MVP and in the video caption",
+  "Hashtags like #HASHTAG will be auto-highlighted in this rules panel.",
 ];
 
 const prizeCards = [
@@ -26,12 +27,85 @@ const prizeCards = [
   { rank: "Top 14-30", prize: "$500 Cash Reward", art: "cash-small" },
   { rank: "Top 20 Rising Creators", prize: "$150 Cash Reward", art: "coins" },
   { rank: "Top 50 posts by views from TikTok Studio App", prize: "$5 Cash Reward", art: "coins-flat" },
-  { rank: "Top 100 posts by views from", prize: "TikTok Studio App", art: "voucher" },
-  { rank: "Reach 1000 VV", prize: "Profile Frame", art: "frame-badge" },
+  { rank: "Top 100-500 posts by views from TikTok Studio App", prize: "$1 Cash Reward", art: "" },
+  { rank: "Reach 1000 VV", prize: "Profile Frame", art: "", upload: true },
   { rank: "Top 200 posts by views from TikTok Studio App", prize: "TikTok Swag", art: "", extra: true },
   { rank: "Selected high-quality creators", prize: "Bonus Reward", art: "", extra: true },
   { rank: "Lucky participating creators", prize: "Surprise Reward", art: "", extra: true },
 ];
+
+const LAUNCH_CURRENCY = "USD";
+
+const CURRENCY_FOLDER = {
+  USD: "USD",
+  EUR: "EUR",
+  GBP: "GBP",
+  JPY: "JPY",
+  KRW: "KRW",
+  IDR: "IDR",
+  VND: "VND",
+  THB: "บาท",
+};
+
+const REWARD_PIC_BASE = "./assets/reward_pic";
+const PROFILE_FRAME_IMAGE = "./assets/profile-frame-78-3305-682e06.png";
+
+function rewardPicUrl(relPath) {
+  return encodeURI(`${REWARD_PIC_BASE}/${relPath}`);
+}
+
+function cashAmountToLevel(amount) {
+  if (amount >= 1000) return 1;
+  if (amount >= 500) return 2;
+  if (amount >= 100) return 3;
+  if (amount >= 10) return 4;
+  return 5;
+}
+
+function cashImageByLevel(level, currency = LAUNCH_CURRENCY) {
+  if (level <= 3) {
+    const folder = CURRENCY_FOLDER[currency] || CURRENCY_FOLDER.USD;
+    return rewardPicUrl(`cash/${folder}/Level ${level}.png`);
+  }
+  return rewardPicUrl(`cash/Level ${level}.png`);
+}
+
+const NON_CASH_KEYWORDS = [
+  { test: /swag/i, file: "Swag_01.png" },
+  { test: /trophy|bonus/i, file: "Trophy.png" },
+  { test: /medal|surprise/i, file: "Medal.png" },
+  { test: /ticket/i, file: "Ticket.png" },
+  { test: /boarding|pass/i, file: "Boarding Pass.png" },
+  { test: /heating/i, file: "Heating Coupon.png" },
+  { test: /promote|coupon/i, file: "Promote Coupon.png" },
+  { test: /top creator|creator/i, file: "Top Creator.png" },
+];
+
+function nonCashImage(text) {
+  const hit = NON_CASH_KEYWORDS.find((k) => k.test.test(text));
+  return hit ? rewardPicUrl(`other type/${hit.file}`) : "";
+}
+
+function resolveRewardImage(...texts) {
+  const text = texts.filter(Boolean).join(" ");
+  const cashMatch = text.match(/\$\s*([\d,]+(?:\.\d+)?)/);
+  if (cashMatch || /cash/i.test(text)) {
+    const amount = cashMatch ? parseFloat(cashMatch[1].replace(/,/g, "")) : 0;
+    return cashImageByLevel(cashAmountToLevel(amount));
+  }
+  return nonCashImage(text);
+}
+
+function renderRewardArt(sizeClass, ...texts) {
+  const src = resolveRewardImage(...texts);
+  const cls = ["reward-art", sizeClass, src ? "has-img" : ""].filter(Boolean).join(" ");
+  return `<div class="${cls}" aria-hidden="true">${src ? `<img src="${src}" alt="" />` : ""}</div>`;
+}
+
+function renderProfileFrameArt(sizeClass = "") {
+  const cls = ["reward-art", sizeClass, "has-img"].filter(Boolean).join(" ");
+  return `<div class="${cls}" aria-hidden="true"><img src="${PROFILE_FRAME_IMAGE}" alt="" /></div>`;
+}
 
 const videoCards = Array.from({ length: 6 }, (_, index) => ({
   title: "Video title supports up to 2 lines of displ...",
@@ -163,9 +237,10 @@ function renderTimeline() {
 }
 
 function renderPrizeCard(card) {
+  const art = card.upload ? renderProfileFrameArt("") : renderRewardArt("", card.prize);
   return `
     <article class="prize-card mini-prize${card.extra ? " is-extra-prize" : ""}">
-      <div class="reward-art ${card.art}" aria-hidden="true"></div>
+      ${art}
       <p><span>${card.rank}</span><strong>${card.prize}</strong></p>
     </article>
   `;
@@ -180,7 +255,7 @@ function renderPrizeSection() {
         <input class="prize-toggle" id="${toggleId}" type="checkbox" aria-label="Toggle more prizes" />
         <div class="prize-wrap" aria-label="Prize list">
           <article class="prize-card grand-prize">
-            <div class="reward-art cash-large" aria-hidden="true"></div>
+            ${renderRewardArt("cash-large", "$2,000 Cash prize")}
             <div>
               <span class="prize-rank">Top 1-3</span>
               <strong>$2,000</strong>
@@ -200,13 +275,23 @@ function renderPrizeSection() {
   );
 }
 
+function highlightHashtags(text) {
+  const stash = [];
+  const safe = text.replace(/<strong>[\s\S]*?<\/strong>/g, (m) => {
+    stash.push(m);
+    return `\u0000${stash.length - 1}\u0000`;
+  });
+  const replaced = safe.replace(/#[A-Za-z0-9_]+/g, (m) => `<strong>${m}</strong>`);
+  return replaced.replace(/\u0000(\d+)\u0000/g, (_, i) => stash[Number(i)]);
+}
+
 function renderRulesSection() {
   return renderFloor(
     "How to Enter the Contest",
     `
       <div class="panel rules-panel">
         ${rules
-          .map((rule) => `<p><i aria-hidden="true"></i><span>${rule}</span></p>`)
+          .map((rule) => `<p><i aria-hidden="true"></i><span>${highlightHashtags(rule)}</span></p>`)
           .join("")}
       </div>
     `,
@@ -284,22 +369,32 @@ function renderCampaignTasksSection() {
 }
 
 function renderCollectCompactSection() {
+  const rankRewards = [
+    { rank: "Top 1-3", amount: "$2,000", label: "Cash Prize", level: 1 },
+    { rank: "Top 4-10", amount: "$1,000", label: "Cash Prize", level: 2 },
+    { rank: "Top 11-30", amount: "$450", label: "Cash Prize", level: 3 },
+    { rank: "Top 31-50", amount: "$200", label: "Cash Prize", level: 4 },
+  ];
+
+  const renderRankReward = ({ rank, amount, label, level }) => {
+    const src = cashImageByLevel(level);
+    const art = `<i class="reward-art has-img" aria-hidden="true"><img src="${src}" alt="" /></i>`;
+    return `<article><span>${rank}</span>${art}<strong>${amount}<br />${label}</strong></article>`;
+  };
+
   return renderFloor(
     "How to Collect Rewards",
     `
       <div class="collect-panel collect-panel-compact">
         <div class="collect-card collect-card-task">
           ${renderPanelCopy("Reward description text", true)}
-          ${renderRewardTask("The reward name supports up to 2 lines", "Post a video with #Tag", true, "locked-reward-task")}
+          ${renderRewardTask("Profile Frame", "Post a video with #Tag", true, "locked-reward-task")}
         </div>
         <div class="collect-card collect-card-ranking">
           <p class="collect-highlight-title">UP TO <span>$2000</span> USD PRIZES !</p>
           ${renderPanelCopy("Reward description text", true)}
           <div class="rank-rewards">
-            <article><span>Top 1-3</span><i class="reward-art" aria-hidden="true"></i><strong>$2,000<br />Cash Prize</strong></article>
-            <article><span>Top 4-10</span><i class="reward-art" aria-hidden="true"></i><strong>$1,000<br />Cash Prize</strong></article>
-            <article><span>Top 11-30</span><i class="reward-art" aria-hidden="true"></i><strong>$450<br />Cash Prize</strong></article>
-            <article><span>Top 31-50</span><i class="reward-art" aria-hidden="true"></i><strong>$200<br />Cash Prize</strong></article>
+            ${rankRewards.map(renderRankReward).join("")}
           </div>
           <div class="collect-divider"></div>
           ${renderRewardTask("Post a video with #Tag", `You posted 5 works, of which <span class="text-primary">1</span> is under review.`, true, "status-task", { showIcon: false })}
@@ -326,10 +421,10 @@ function renderCollectRichSection() {
               <div><small>$</small><strong>60</strong></div>
               <span>Base Rewards</span>
             </div>
-            <img src="./assets/crp-reward-art.png" alt="" />
+            <img src="${cashImageByLevel(5)}" alt="" />
           </div>
           <div class="crp-double-reward">
-            <div class="crp-double-placeholder" aria-hidden="true"></div>
+            <div class="crp-double-placeholder" aria-hidden="true"><img src="${cashImageByLevel(1)}" alt="" /></div>
             <div class="crp-income crp-income-double">
               <div><small>$</small><strong>120</strong></div>
               <span>Total Rewards</span>
@@ -340,10 +435,10 @@ function renderCollectRichSection() {
             </div>
           </div>
           <div class="crp-x2" aria-hidden="true">
-            <img src="./assets/crp-x2-badge.svg" alt="" />
+            <img src="./assets/double.svg" alt="" />
           </div>
         </div>
-        ${renderPanelCopy(`Rewards for today's posts are 0, and the amount will update the next day. <a href="#">View your reward details and collect your rewards.</a>`, false, "crp-copy")}
+        <p class="panel-copy crp-copy">Rewards for today's posts are 0, and the amount will update the next day. <u>View your reward details and collect your rewards.</u></p>
         <div class="collect-divider"></div>
         ${renderRewardTask("# MVP", "Explanation of the topic content, with reference to content direction", true, "crp-task topic-task")}
       </div>
@@ -355,7 +450,7 @@ function renderCollectRichSection() {
 function renderLockedRewardTile() {
   return `
     <article class="locked-reward-card">
-      <div class="reward-art" aria-hidden="true"></div>
+      ${renderProfileFrameArt("")}
       <strong>Reward name</strong>
       <span class="lock-badge" aria-hidden="true"><img src="./assets/icon-lock-large-fill.svg" alt="" /></span>
     </article>
@@ -405,7 +500,6 @@ function renderVideoCard(card) {
   return `
     <article class="video-card${card.extra ? " is-extra-video" : ""}">
       <div class="video-thumb">
-        <img class="video-logo" src="./assets/video-logo.svg" alt="" aria-hidden="true" />
         <div class="video-metrics" aria-hidden="true">
           <img class="video-heart" src="./assets/video-heart.svg" alt="" aria-hidden="true" />
           <span>${card.likes}</span>
@@ -490,8 +584,8 @@ function renderOtherActivities() {
 }
 
 function renderWorkReviewSection() {
-  const renderReviewItem = (item) => `
-    <article class="review-item">
+  const renderReviewItem = (item, extraClass = "") => `
+    <article class="review-item${extraClass ? ` ${extraClass}` : ""}">
       <div class="review-thumb" aria-hidden="true"><span>0:48</span></div>
       <div class="review-body">
         <strong>${item.title}</strong>
@@ -512,10 +606,11 @@ function renderWorkReviewSection() {
           ${renderReviewItem(reviewItems[0])}
         </div>
         <div class="review-list">
-          ${reviewItems.slice(1).map(renderReviewItem).join("")}
+          ${reviewItems.slice(1, 4).map((item) => renderReviewItem(item)).join("")}
+          ${reviewItems.slice(4, 6).map((item) => renderReviewItem(item, "is-extra-review")).join("")}
         </div>
-        <button class="see-more static-see-more is-expanded" type="button">
-          <span>See less</span>
+        <button class="see-more" type="button" data-toggle-target="review-extra" aria-expanded="false">
+          <span>See more</span>
           <i aria-hidden="true"></i>
         </button>
       </div>
@@ -529,8 +624,10 @@ function renderMiniVideoThumb() {
     <div class="guide-video" aria-hidden="true">
       <div class="guide-video-meta">
         <strong>Video title<br />Supports up to two...</strong>
-        <span>${renderAvatar()}Username</span>
-        <em><img class="video-heart" src="./assets/video-heart.svg" alt="" />803</em>
+        <div class="guide-video-footer">
+          <span class="guide-video-user">${renderAvatar()}Username</span>
+          <em><img class="video-heart" src="./assets/guidance-heart.svg" alt="" />803</em>
+        </div>
       </div>
     </div>
   `;
@@ -538,9 +635,21 @@ function renderMiniVideoThumb() {
 
 function renderGuidanceSection() {
   const blocks = [
-    ["Well-crafted", "This creator invests time and effort to produce quality content with great shots and editing."],
-    ["Engaging", "Creators tackle big questions that capture viewers' attention and spark meaningful conversations."],
-    ["Specialized", "Show off your niche expertise with tailored experiences and a unique perspective."],
+    [
+      "well-crafted",
+      "Well-crafted",
+      "This creator invests time and effort to produce quality content with great shots and editing.",
+    ],
+    [
+      "engaging",
+      "Engaging",
+      "Creators tackle big questions that capture viewers' attention. Engaging content entertains and fosters meaningful connections, sparking conversations beyond TikTok!",
+    ],
+    [
+      "specialized",
+      "Specialized",
+      "Notice how this creator shows off his expertise in his niche with tailored experiences? Show off your niche expertise and use your unique, authentic perspective to create content that's valuable for your viewers!",
+    ],
   ];
 
   return renderFloor(
@@ -549,8 +658,8 @@ function renderGuidanceSection() {
       <div class="panel guidance-panel">
         ${blocks
           .map(
-            ([title, copy]) => `
-              <article class="guidance-block">
+            ([key, title, copy]) => `
+              <article class="guidance-block guidance-block--${key}">
                 <div class="guidance-title"><i aria-hidden="true"></i><strong>${title}</strong></div>
                 <p>${copy}</p>
                 <div class="guide-video-row">
@@ -657,6 +766,19 @@ function bindVideoToggles() {
   });
 }
 
+function bindReviewToggles() {
+  document.querySelectorAll('button.see-more[data-toggle-target="review-extra"]').forEach((button) => {
+    button.addEventListener("click", () => {
+      const panel = button.closest(".review-panel");
+      const label = button.querySelector("span");
+      const expanded = panel?.classList.toggle("is-expanded");
+      button.classList.toggle("is-expanded", Boolean(expanded));
+      button.setAttribute("aria-expanded", String(Boolean(expanded)));
+      label.textContent = expanded ? "See less" : "See more";
+    });
+  });
+}
+
 function bindPrizeToggle() {
   const prizeToggle = document.querySelector(".prize-toggle");
   const prizeToggleLabel = document.querySelector(".prize-toggle-label");
@@ -707,6 +829,7 @@ function renderApp() {
   window.AOC_TEMPLATE = activeTemplate;
   bindNavigationBar();
   bindVideoToggles();
+  bindReviewToggles();
   bindPrizeToggle();
   bindActivityToggle();
   bindCampaignTabs();

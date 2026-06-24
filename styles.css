@@ -1,3 +1,12 @@
+@font-face {
+  font-family: "TikTok Sans";
+  src: url("./assets/fonts/TikTokSans-VF.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-stretch: 75% 125%;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --page-bg: #f5f5f5;
   --kv-bg: #f1f1f1;
@@ -34,6 +43,9 @@ body {
   color: var(--text-1);
   display: flex;
   font-family: var(--font);
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   justify-content: center;
   padding: 0 !important;
 }
@@ -493,6 +505,17 @@ button {
   content: none;
 }
 
+.reward-art.has-img {
+  background: none;
+}
+
+.reward-art > img {
+  display: block;
+  height: 100%;
+  object-fit: contain;
+  width: 100%;
+}
+
 .reward-art > span,
 .reward-art::after {
   display: none;
@@ -842,10 +865,6 @@ button {
   width: 77px;
 }
 
-.static-see-more {
-  margin-top: 0;
-}
-
 .collect-panel-compact {
   background: transparent;
   border-radius: 0;
@@ -935,7 +954,7 @@ button {
   font-weight: 600;
   line-height: 1.3;
   margin: 0 0 4px;
-  opacity: 0.7;
+  opacity: 1;
   padding: 4px 8px;
   background: rgba(0, 0, 0, 0.08);
   border-radius: 0 0 6px 6px;
@@ -948,6 +967,17 @@ button {
   height: 50px;
   margin: 4px 0;
   width: 50px;
+}
+
+.rank-rewards .reward-art.has-img {
+  background: none;
+}
+
+.rank-rewards .reward-art > img {
+  display: block;
+  height: 100%;
+  object-fit: contain;
+  width: 100%;
 }
 
 .rank-rewards .has-image-icon::after {
@@ -1010,6 +1040,7 @@ button {
   align-items: flex-end;
   display: flex;
   height: 147px;
+  overflow: hidden;
   position: relative;
   width: 326px;
 }
@@ -1025,7 +1056,11 @@ button {
   padding: 8px 16px;
   position: relative;
   width: 143px;
-  z-index: 2;
+  z-index: 1;
+}
+
+.crp-base-reward .crp-income {
+  align-self: stretch;
 }
 
 .crp-base-reward img {
@@ -1036,31 +1071,53 @@ button {
 }
 
 .crp-double-reward {
-  background: url("./assets/crp-double-bg.svg") left top / 209px 147px no-repeat;
   border-radius: 8px;
   color: #ffffff;
   height: 147px;
-  margin-left: -26px;
-  overflow: hidden;
-  padding: 8px 16px 12px 42px;
+  overflow: visible;
+  padding: 8px 16px 12px 0;
   position: relative;
+  width: 183px;
+  z-index: 2;
+}
+
+.crp-double-reward::before {
+  background: url("./assets/crp-double-bg.svg") left top / 209px 147px no-repeat;
+  border-radius: 8px;
+  content: "";
+  height: 147px;
+  left: -26px;
+  position: absolute;
+  top: 0;
   width: 209px;
+  z-index: 0;
 }
 
 .crp-double-placeholder {
-  background: var(--neutral-4);
+  background: none;
   border-radius: 8px;
   height: 142px;
   left: 49px;
   position: absolute;
   top: 29px;
   width: 142px;
+  z-index: 1;
+}
+
+.crp-double-placeholder img {
+  display: block;
+  height: 100%;
+  object-fit: contain;
+  width: 100%;
 }
 
 .crp-income {
   color: var(--text-3);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 .crp-income div {
@@ -1151,10 +1208,32 @@ button {
   width: 67px;
 }
 
-.crp-copy a {
+.panel-copy.crp-copy {
+  color: rgba(0, 0, 0, 0.48);
+  font-family: "TikTok Sans", var(--font);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.3;
+  max-width: 326px;
+  min-height: 48px;
+}
+
+.crp-copy u {
   color: inherit;
+  font: inherit;
   text-decoration: underline;
   text-underline-position: from-font;
+}
+
+.crp-copy u::after {
+  background: url("./assets/icon-question-circle.svg") center / contain no-repeat;
+  content: "";
+  display: inline-block;
+  height: 14px;
+  margin-left: 4px;
+  transform: translateY(2px);
+  vertical-align: baseline;
+  width: 14px;
 }
 
 .collect-panel-rich .reward-task {
@@ -1187,7 +1266,8 @@ button {
 }
 
 .collect-card-task .reward-task > i::before {
-  background: rgba(0, 0, 0, 0.05);
+  background: url("./assets/profile-frame-78-3305-682e06.png") center / cover no-repeat;
+  border-radius: 8px;
   content: "";
   height: 40px;
   left: 5px;
@@ -1314,54 +1394,60 @@ button {
   gap: 16px;
 }
 
+.review-panel .is-extra-review {
+  display: none;
+}
+
+.review-panel.is-expanded .is-extra-review {
+  display: flex;
+}
+
 .review-notice-card {
-  background: var(--neutral-4);
+  align-self: center;
+  align-items: center;
+  background: #f8f8f8;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 8px 0 0;
+  padding: 8px;
+  width: 342px;
 }
 
 .review-info {
   align-items: flex-start;
   color: var(--text-3);
   display: flex;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 400;
   gap: 6px;
   line-height: 1.3;
+  letter-spacing: 0.0097em;
   margin: 0;
-  padding: 0 8px;
+  padding: 0;
+  width: 326px;
 }
 
 .review-info i {
-  align-items: center;
-  border: 1.5px solid var(--text-3);
-  border-radius: 999px;
-  color: var(--text-3);
-  display: flex;
-  flex: 0 0 auto;
-  font-size: 9px;
-  font-style: normal;
-  font-weight: 700;
-  height: 12px;
-  justify-content: center;
-  line-height: 1;
+  background: url("./assets/icon-info-circle.svg") center / 12.83px 12.83px no-repeat;
+  display: block;
+  flex: 0 0 14px;
+  height: 14px;
   margin-top: 1px;
-  width: 12px;
+  width: 14px;
 }
 
 .review-info i::before {
-  content: "i";
+  content: none;
 }
 
 .review-item {
   align-items: flex-start;
+  align-self: stretch;
   display: flex;
   gap: 12px;
   min-height: 96px;
-  width: 326px;
+  width: auto;
 }
 
 .review-thumb {
@@ -1375,17 +1461,17 @@ button {
 }
 
 .review-thumb::after {
-  background: linear-gradient(180deg, #00000000 0%, #00000059 100%);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.3) 100%);
   bottom: 0;
   content: "";
-  height: 36px;
+  height: 26px;
   left: 0;
   position: absolute;
   right: 0;
 }
 
 .review-thumb span {
-  bottom: 8px;
+  bottom: 5px;
   color: #ffffff;
   font-size: 12px;
   font-weight: 600;
@@ -1425,7 +1511,7 @@ button {
 
 .review-total {
   color: var(--text-1) !important;
-  font-size: 12px !important;
+  font-size: 13px !important;
   font-weight: 600 !important;
   line-height: 1.3 !important;
   margin: 18px 0 0 !important;
@@ -1460,7 +1546,10 @@ button {
 }
 
 .guidance-block {
-  border-top: 1px solid var(--neutral-4);
+  border-top: 1px solid rgba(153, 153, 153, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   padding-top: 16px;
 }
 
@@ -1473,41 +1562,46 @@ button {
   align-items: center;
   display: flex;
   gap: 6px;
-  margin-bottom: 4px;
 }
 
 .guidance-title i {
-  background: var(--neutral-4);
-  border-radius: 999px;
+  background: center / contain no-repeat;
   flex: 0 0 auto;
   height: 20px;
-  position: relative;
   width: 20px;
 }
 
-.guidance-title i::before {
-  background: var(--text-1);
-  border-radius: 2px;
-  content: "";
-  height: 9px;
-  left: 7px;
-  opacity: 0.35;
-  position: absolute;
-  top: 5px;
-  width: 6px;
+.guidance-block--well-crafted .guidance-title i {
+  background-image: url("./assets/guidance-well-crafted.svg");
+}
+
+.guidance-block--engaging .guidance-title i {
+  background-image: url("./assets/guidance-engaging.svg");
+}
+
+.guidance-block--specialized .guidance-title i {
+  background-image: url("./assets/guidance-specialized.svg");
 }
 
 .guidance-title strong {
   color: var(--text-1);
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
   line-height: 1.3;
+}
+
+.guidance-block > p {
+  color: var(--text-3);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.3;
+  margin: 6px 0 0;
 }
 
 .guide-video-row {
   display: flex;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 16px;
   margin-right: -16px;
   overflow-x: auto;
   overflow-y: hidden;
@@ -1521,30 +1615,36 @@ button {
 }
 
 .guide-video {
-  background: linear-gradient(180deg, #eeeeee 0%, #eeeeee 61%, #7e7e7e 100%);
+  background: rgba(0, 0, 0, 0.05);
   border-radius: 8px;
-  flex: 0 0 151px;
-  height: 212px;
+  flex: 0 0 150px;
+  height: 200px;
   overflow: hidden;
   position: relative;
 }
 
 .guide-video::after {
-  background: linear-gradient(180deg, #00000000 0%, #00000066 100%);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.6) 100%);
   bottom: 0;
   content: "";
-  height: 76px;
+  height: 140px;
   left: 0;
   position: absolute;
   right: 0;
 }
 
 .guide-video-meta {
-  bottom: 8px;
+  bottom: 0;
   color: #ffffff;
-  left: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 140px;
+  justify-content: flex-end;
+  left: 0;
+  padding: 8px;
   position: absolute;
-  right: 8px;
+  right: 0;
   z-index: 1;
 }
 
@@ -1552,12 +1652,13 @@ button {
   display: block;
   font-size: 13px;
   font-weight: 600;
-  line-height: 1.15;
-  margin-bottom: 4px;
-  max-width: 118px;
+  line-height: 1.3;
+  margin: 0;
+  min-height: 34px;
   overflow: hidden;
 }
 
+.guide-video-footer,
 .guide-video-meta span,
 .guide-video-meta em {
   align-items: center;
@@ -1570,19 +1671,28 @@ button {
   vertical-align: middle;
 }
 
-.guide-video-meta span {
-  margin-right: 8px;
+.guide-video-footer {
+  justify-content: space-between;
+  width: 100%;
 }
 
-.guide-video-meta .creator-icon {
-  height: 16px;
-  width: 16px;
+.guide-video-user {
+  color: #ffffff;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.guide-video-meta em {
+  color: #ffffff;
+  flex: 0 0 auto;
+  font-family: "TikTok Text", "TikTok Sans", var(--font);
+  font-weight: 500;
+  letter-spacing: 0.0097em;
 }
 
 .guide-video-meta .video-heart {
-  filter: brightness(0) invert(1);
-  height: 13px;
-  width: 13px;
+  height: 12px;
+  width: 12px;
 }
 
 .tips-panel {
@@ -1597,7 +1707,8 @@ button {
 }
 
 .follower-avatar {
-  background: url("./assets/avatar-placeholder.svg") center / contain no-repeat;
+  background: #e3e3e3;
+  border-radius: 50%;
   flex: 0 0 auto;
   height: 60px;
   width: 60px;
@@ -1653,16 +1764,6 @@ button {
   height: 212px;
   overflow: hidden;
   position: relative;
-}
-
-.video-logo {
-  display: block;
-  height: 64px;
-  left: 50%;
-  position: absolute;
-  top: 48px;
-  transform: translateX(-50%);
-  width: 56px;
 }
 
 .video-metrics {
