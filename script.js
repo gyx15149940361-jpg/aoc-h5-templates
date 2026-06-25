@@ -49,6 +49,10 @@ const CURRENCY_FOLDER = {
 
 const REWARD_PIC_BASE = "./assets/reward_pic";
 const PROFILE_FRAME_IMAGE = "./assets/profile-frame-78-3305-682e06.png";
+const REVIEW_EMPTY_STATE_IMAGE = "./assets/review-empty-illustration.png";
+const REVIEW_PANEL_VARIANT = query.get("review") === "empty" ? "empty" : "list";
+const CRP_COLLECT_STATE = query.get("crp") || "earning";
+const COLLECT_VARIANT = (query.get("variant") || app?.dataset.collectVariant || "default").toLowerCase();
 
 function rewardPicUrl(relPath) {
   return encodeURI(`${REWARD_PIC_BASE}/${relPath}`);
@@ -154,6 +158,93 @@ const reviewItems = [
     link: true,
   },
 ];
+
+const CRP_TOOLTIP_COPY = {
+  beforeThreshold:
+    "The double reward amount is the maximum estimated value, but is not guaranteed. The reward amount displayed after meeting the threshold is final. Only the rewards generated within 30 days after publication are eligible for double rewards.",
+  afterThreshold:
+    "Only the rewards generated within 30 days after publication are eligible for double rewards.",
+};
+
+const CRP_COLLECT_STATES = {
+  "not-joined": {
+    title: "Join the Creator Rewards Program now to enjoy double earnings!",
+    eligibleLabel: "Qualified posts:",
+    eligibleValue: "0",
+    doubledIncome: "$0",
+    baseReward: "0",
+    totalReward: "0",
+    locked: true,
+    cta: "Check Eligible to join",
+  },
+  "joined-locked": {
+    title: "Post 7 more videos to unlock double income",
+    eligibleValue: '<span class="text-primary">3</span>/10',
+    doubledIncome: "$15",
+    baseReward: "15",
+    totalReward: "30",
+    locked: true,
+    showDetails: true,
+    showTask: true,
+    tooltipVariant: "beforeThreshold",
+  },
+  "joined-tooltip": {
+    title: "Post 7 more videos to unlock double income",
+    eligibleValue: '<span class="text-primary">3</span>/10',
+    doubledIncome: "$15",
+    baseReward: "15",
+    totalReward: "30",
+    locked: true,
+    showDetails: true,
+    showTask: true,
+    tooltipVariant: "beforeThreshold",
+    tooltipOpen: true,
+  },
+  earning: {
+    title: "Keep creating qualified posts to earn more double income",
+    eligibleValue: "12",
+    doubledIncome: "$120",
+    baseReward: "60",
+    totalReward: "120",
+    showDetails: true,
+    showTask: true,
+    tooltipVariant: "afterThreshold",
+  },
+  "earning-collected": {
+    title: "Keep creating qualified posts to earn more double income",
+    eligibleValue: "12",
+    doubledIncome: "$120",
+    baseReward: "60",
+    totalReward: "120",
+    showDetails: true,
+    showTask: true,
+    linkPeriodInside: true,
+    tooltipVariant: "afterThreshold",
+    tooltipOpen: true,
+  },
+  capped: {
+    title: "Income cap reached, no more double earnings for next posts",
+    eligibleValue: "1,031",
+    doubledIncome: "$10,000",
+    baseReward: "500",
+    totalReward: "1000",
+    showDetails: true,
+    showTask: true,
+    linkPeriodInside: true,
+    tooltipVariant: "afterThreshold",
+  },
+};
+
+function renderReviewEmptyState() {
+  return `
+    <div class="review-empty-state">
+      <div class="review-empty-state-hero">
+        <img class="review-empty-state-image" src="${REVIEW_EMPTY_STATE_IMAGE}" alt="" aria-hidden="true" />
+      </div>
+      <strong>No submission yet, you can post now</strong>
+    </div>
+  `;
+}
 
 function renderStatusBar() {
   return `
@@ -299,8 +390,8 @@ function renderRulesSection() {
   );
 }
 
-function renderTinyPostButton() {
-  return `<button class="tiny-post" type="button">Post</button>`;
+function renderTinyPostButton(label = "Post") {
+  return `<button class="tiny-post" type="button">${label}</button>`;
 }
 
 function renderPanelCopy(text, withHelp = false, className = "") {
@@ -319,7 +410,7 @@ function renderRewardTask(title, copy, withButton = true, className = "", option
         <strong>${title}</strong>
         <p>${copy}</p>
       </div>
-      ${withButton ? renderTinyPostButton() : ""}
+      ${withButton ? renderTinyPostButton(options.buttonLabel) : ""}
     </div>
   `;
 }
@@ -405,20 +496,255 @@ function renderCollectCompactSection() {
   );
 }
 
+function renderTaskProgress({ value, total }) {
+  return `
+    <div class="cv-progress">
+      <span class="cv-progress-bar" aria-hidden="true"><span style="width:${Math.min(100, Math.round((value / total) * 100))}%"></span></span>
+      <span class="cv-progress-text"><em>${value}</em><span>/${total}</span></span>
+    </div>
+  `;
+}
+
+function renderCollectTaskListVariantSection() {
+  const tasks = [
+    {
+      kind: "image",
+      title: "The reward name supports up to 2 lines",
+      copy: `Post 3 videos with #Tag (<span class="text-primary">0</span>/3)`,
+      buttonLabel: "Post",
+    },
+    {
+      kind: "image",
+      title: "The reward name supports up to 2 lines",
+      copy: "Post a video with #Tag",
+      buttonLabel: "Post",
+    },
+    {
+      kind: "progress",
+      title: "$50 promote coupon",
+      copy: "Post 15 videos with #Tag",
+      progress: { value: 3, total: 15 },
+      buttonLabel: "Post",
+    },
+    {
+      kind: "progress",
+      title: "$500 cash",
+      copy: "Post a video with #Tag to get 999 views",
+      progress: { value: 199, total: 999 },
+      buttonLabel: "Post",
+    },
+    {
+      kind: "done",
+      title: "The reward name supports up to 2 lines",
+      copy: "Post a video with #Tag",
+      buttonLabel: "Done",
+    },
+  ];
+
+  const renderArt = (state) =>
+    `<i class="cv-art cv-art--${state}" aria-hidden="true"></i>`;
+
+  const renderTaskItem = (task) => {
+    const isDone = task.kind === "done";
+    const artState = isDone ? "done" : "locked";
+    const buttonHTML = isDone
+      ? `<button class="tiny-post tiny-post--done" type="button" disabled>${task.buttonLabel}</button>`
+      : `<button class="tiny-post" type="button">${task.buttonLabel}</button>`;
+
+    return `
+      <article class="cv-task-row">
+        ${renderArt(artState)}
+        <div class="cv-task-body">
+          <strong>${task.title}</strong>
+          <p>${task.copy}</p>
+          ${task.kind === "progress" ? renderTaskProgress(task.progress) : ""}
+        </div>
+        ${buttonHTML}
+      </article>
+    `;
+  };
+
+  return renderFloor(
+    "How to Collect Rewards",
+    `
+      <div class="collect-panel collect-panel-variant cv-task-list">
+        ${renderPanelCopy("Reward description text", true)}
+        <div class="cv-task-stack">
+          ${tasks.map(renderTaskItem).join('<div class="cv-divider"></div>')}
+        </div>
+      </div>
+    `,
+    "collect-floor"
+  );
+}
+
+function renderCollectSingleRewardVariantSection() {
+  const tasks = [
+    { title: "Post a video with #Tag", buttonLabel: "Post" },
+    {
+      title: `Post 3 videos with #Tag (<span class="text-primary">1</span>/3)`,
+      buttonLabel: "Post",
+    },
+    {
+      title: `Follow 5 influencers (<span class="text-primary">0</span>/5)`,
+      copy: "Only video creators with the #Eatventure hashtag",
+      buttonLabel: "Follow",
+    },
+    {
+      title: "Like others' videos 999 times",
+      progress: { value: 184, total: 999 },
+      buttonLabel: "Like",
+    },
+    {
+      title: "Post a video with #Tag to get 999 views",
+      progress: { value: 198, total: 9999 },
+      buttonLabel: "Post",
+    },
+  ];
+
+  const renderTask = (task) => `
+    <article class="cv-task-row cv-task-row--plain">
+      <div class="cv-task-body">
+        <strong>${task.title}</strong>
+        ${task.copy ? `<p>${task.copy}</p>` : ""}
+        ${task.progress ? renderTaskProgress(task.progress) : ""}
+      </div>
+      <button class="tiny-post" type="button">${task.buttonLabel}</button>
+    </article>
+  `;
+
+  return renderFloor(
+    "How to Collect Rewards",
+    `
+      <div class="collect-panel collect-panel-variant cv-single-reward">
+        <div class="cv-single-card">
+          <div class="cv-single-art" aria-hidden="true"></div>
+          <div class="cv-single-body">
+            <strong>Profile frame</strong>
+            <span class="cv-single-meta"><span>Learn more about rewards</span><i aria-hidden="true"></i></span>
+          </div>
+          <span class="cv-single-lock" aria-hidden="true"></span>
+        </div>
+        <div class="cv-section-title">Complete 5 tasks for rewards</div>
+        <div class="cv-task-stack">
+          ${tasks.map(renderTask).join('<div class="cv-divider"></div>')}
+        </div>
+      </div>
+    `,
+    "collect-floor"
+  );
+}
+
+function renderCollectTierRewardVariantSection() {
+  const tiers = [
+    { label: "Profile\nframe", art: "./assets/profile-frame-78-3305-682e06.png" },
+    { label: "TikTok\nSwag", art: "./assets/reward_pic/other%20type/Swag_01.png" },
+    { label: "$50\nCash Prize", art: "./assets/reward_pic/cash/USD/Level%201.png" },
+    { label: "Reward\nname", art: "./assets/reward_pic/other%20type/Trophy.png" },
+  ];
+  const milestones = [
+    { text: "500vv", state: "done" },
+    { text: "1,000vv", state: "locked" },
+    { text: "10,000vv", state: "locked" },
+    { text: "Awarding rules", state: "locked" },
+  ];
+  const reachedMilestoneIndex = 0;
+  const tierCount = tiers.length;
+  const tierStageClass = tierCount >= 3 ? "cv-tier-stage is-scrollable" : "cv-tier-stage";
+
+  const renderTier = ({ label, art }) => {
+    const labelHTML = label.split("\n").map((line) => `<span>${line}</span>`).join("");
+    return `<article class="cv-tier-card"><span class="cv-tier-art" aria-hidden="true"><img src="${art}" alt="" /></span><strong>${labelHTML}</strong></article>`;
+  };
+
+  const renderMilestone = ({ text, state }) => `
+    <div class="cv-milestone cv-milestone--${state}">
+      <span class="cv-milestone-dot" aria-hidden="true"></span>
+      <span class="cv-milestone-text">${text}</span>
+    </div>
+  `;
+
+  return renderFloor(
+    "How to Collect Rewards",
+    `
+      <div class="collect-panel collect-panel-variant cv-tier-reward">
+        <div class="cv-tier-header">
+          <p class="collect-highlight-title">UP TO <span>$2000</span> USD PRIZES !</p>
+          ${renderPanelCopy("Reward description text", true)}
+        </div>
+        <div class="${tierStageClass}" style="--cv-tier-count:${tierCount}">
+          <div class="cv-tier-list">
+            ${tiers.map(renderTier).join("")}
+          </div>
+          <div class="cv-tier-track">
+            <div class="cv-tier-bar"><span style="width:calc((var(--cv-tier-cell) / 2) + (${reachedMilestoneIndex} * (var(--cv-tier-cell) + var(--cv-tier-gap))))"></span></div>
+            <div class="cv-milestone-row">
+              ${milestones.map(renderMilestone).join("")}
+            </div>
+          </div>
+        </div>
+        <div class="cv-divider"></div>
+        ${renderRewardTask("Continue post quality works", `You posted 5 works, of which <span class="text-primary">1</span> is under review.`, true, "status-task", { showIcon: false })}
+      </div>
+    `,
+    "collect-floor"
+  );
+}
+
+function renderCollectVariantSection() {
+  switch (COLLECT_VARIANT) {
+    case "collect-task-list":
+      return renderCollectTaskListVariantSection();
+    case "single-reward":
+      return renderCollectSingleRewardVariantSection();
+    case "tier-reward":
+      return renderCollectTierRewardVariantSection();
+    default:
+      return renderCollectCompactSection();
+  }
+}
+
 function renderCollectRichSection() {
+  const state = CRP_COLLECT_STATES[CRP_COLLECT_STATE] || CRP_COLLECT_STATES.earning;
+  const detailsText = "Rewards for today's posts are 0, and the amount will update the next day.";
+  const detailsLink = state.linkPeriodInside
+    ? "View your reward details and collect your rewards."
+    : "View your reward details and collect your rewards";
+  const detailsSuffix = state.linkPeriodInside ? "" : ".";
+  const tooltipMessage = state.tooltipVariant ? CRP_TOOLTIP_COPY[state.tooltipVariant] : "";
+  const renderCrpTooltipTrigger = () =>
+    tooltipMessage
+      ? `<span class="crp-copy-info-wrap">
+          <button class="crp-copy-info" type="button" aria-label="Show double reward details" aria-expanded="${state.tooltipOpen ? "true" : "false"}">
+            <img src="./assets/icon-question-circle.svg" alt="" aria-hidden="true" />
+          </button>
+          <span class="crp-tooltip ${state.tooltipOpen ? "is-open" : ""}" role="note">
+            <span class="crp-tooltip-arrow" aria-hidden="true"></span>
+            <span class="crp-tooltip-text">${tooltipMessage}</span>
+          </span>
+        </span>`
+      : "";
+  const detailsCopy = `
+    <span>${detailsText}</span>
+    <span class="crp-copy-link-wrap">
+      <u>${detailsLink}</u>${detailsSuffix ? `<span class="crp-copy-suffix">${detailsSuffix}</span>` : ""}
+      ${renderCrpTooltipTrigger()}
+    </span>
+  `;
+
   return renderFloor(
     "How to Collect Rewards",
     `
       <div class="panel collect-panel collect-panel-rich">
         <div class="crp-summary">
-          <h3>Keep creating qualified posts to earn more double income</h3>
-          <p><span>Eligible posts:</span><strong>12</strong></p>
-          <p><span>Get doubled income:</span><strong>$120</strong></p>
+          <h3>${state.title}</h3>
+          <p><span>${state.eligibleLabel || "Eligible posts:"}</span><strong>${state.eligibleValue}</strong></p>
+          <p><span>Get doubled income:</span><strong>${state.doubledIncome}</strong></p>
         </div>
         <div class="crp-reward-hero" aria-label="Reward progress">
           <div class="crp-base-reward">
             <div class="crp-income">
-              <div><small>$</small><strong>60</strong></div>
+              <div><small>$</small><strong>${state.baseReward}</strong></div>
               <span>Base Rewards</span>
             </div>
             <img src="${cashImageByLevel(5)}" alt="" />
@@ -426,21 +752,26 @@ function renderCollectRichSection() {
           <div class="crp-double-reward">
             <div class="crp-double-placeholder" aria-hidden="true"><img src="${cashImageByLevel(1)}" alt="" /></div>
             <div class="crp-income crp-income-double">
-              <div><small>$</small><strong>120</strong></div>
+              <div><small>$</small><strong>${state.totalReward}</strong></div>
               <span>Total Rewards</span>
             </div>
-            <div class="crp-lock" aria-hidden="true">
-              <img src="./assets/icon-lock-large-fill.svg" alt="" />
+            ${
+              state.locked
+                ? `<div class="crp-lock" aria-hidden="true">
+              <img src="./assets/icon-lock-badge.svg" alt="" />
               <span>Locked</span>
-            </div>
+            </div>`
+                : ""
+            }
           </div>
           <div class="crp-x2" aria-hidden="true">
             <img src="./assets/double.svg" alt="" />
           </div>
         </div>
-        <p class="panel-copy crp-copy">Rewards for today's posts are 0, and the amount will update the next day. <u>View your reward details and collect your rewards.</u></p>
-        <div class="collect-divider"></div>
-        ${renderRewardTask("# MVP", "Explanation of the topic content, with reference to content direction", true, "crp-task topic-task")}
+        ${state.cta ? `<button class="crp-outline-cta" type="button">${state.cta}<i aria-hidden="true"></i></button>` : ""}
+        ${state.showDetails ? `<p class="panel-copy crp-copy">${detailsCopy}</p>` : ""}
+        ${state.showTask ? `<div class="collect-divider"></div>` : ""}
+        ${state.showTask ? renderRewardTask("# MVP", "Explanation of the topic content, with reference to content direction", true, "crp-task topic-task", { buttonLabel: "Post" }) : ""}
       </div>
     `,
     "collect-floor"
@@ -601,6 +932,10 @@ function renderWorkReviewSection() {
     `
       <div class="panel review-panel">
         ${renderPanelCopy("Only posts that add the activity hashtag will be displayed here.")}
+        ${
+          REVIEW_PANEL_VARIANT === "empty"
+            ? renderReviewEmptyState()
+            : `
         <div class="review-notice-card">
           <p class="review-info"><i aria-hidden="true"></i><span>These videos meet the Activity Incentive criteria but won't get the rewards as the monthly maximum has been reached.</span></p>
           ${renderReviewItem(reviewItems[0])}
@@ -612,7 +947,8 @@ function renderWorkReviewSection() {
         <button class="see-more" type="button" data-toggle-target="review-extra" aria-expanded="false">
           <span>See more</span>
           <i aria-hidden="true"></i>
-        </button>
+        </button>`
+        }
       </div>
     `,
     "review-floor"
@@ -689,7 +1025,7 @@ function renderTipsSection() {
             <strong>Chat with other creators</strong>
             <p>Official Discord community</p>
           </div>
-          ${renderTinyPostButton()}
+          ${renderTinyPostButton("Join")}
         </article>
       </div>
     `,
@@ -720,7 +1056,7 @@ const templateSections = {
     renderTimeline,
     renderPrizeSection,
     renderRulesSection,
-    renderCollectCompactSection,
+    renderCollectVariantSection,
     () => renderVideoSection("Post to Win Rewards"),
     renderActivityAnchor,
     renderOtherActivities,
@@ -822,6 +1158,46 @@ function bindCampaignTabs() {
   });
 }
 
+function bindCrpTooltip() {
+  document.querySelectorAll(".crp-copy-info").forEach((button) => {
+    const initialTooltip = button.parentElement?.querySelector(".crp-tooltip.is-open");
+    if (initialTooltip) {
+      requestAnimationFrame(() => positionCrpTooltip(button, initialTooltip));
+    }
+
+    button.addEventListener("click", () => {
+      const wrap = button.parentElement;
+      const tooltip = wrap?.querySelector(".crp-tooltip");
+      if (!tooltip) return;
+      const expanded = !tooltip.classList.contains("is-open");
+      tooltip.classList.toggle("is-open", expanded);
+      button.setAttribute("aria-expanded", String(expanded));
+      if (expanded) positionCrpTooltip(button, tooltip);
+    });
+  });
+}
+
+function repositionOpenCrpTooltips() {
+  document.querySelectorAll(".crp-tooltip.is-open").forEach((tooltip) => {
+    const button = tooltip.parentElement?.querySelector(".crp-copy-info");
+    if (button) positionCrpTooltip(button, tooltip);
+  });
+}
+
+function positionCrpTooltip(button, tooltip) {
+  const wrap = button.parentElement;
+  const arrow = tooltip.querySelector(".crp-tooltip-arrow");
+  if (!wrap || !arrow) return;
+  const wrapRect = wrap.getBoundingClientRect();
+  const iconRect = button.getBoundingClientRect();
+  const pageRect = document.querySelector(".page-shell")?.getBoundingClientRect();
+  const tooltipLeft = (pageRect?.left || 0) + 16;
+  tooltip.style.left = `${tooltipLeft - wrapRect.left}px`;
+  tooltip.style.right = "auto";
+  const iconCenterX = iconRect.left + iconRect.width / 2;
+  arrow.style.left = `${iconCenterX - tooltipLeft}px`;
+}
+
 function renderApp() {
   const sections = templateSections[activeTemplate].map((section) => section()).join("");
   app.innerHTML = renderShell(sections);
@@ -833,6 +1209,8 @@ function renderApp() {
   bindPrizeToggle();
   bindActivityToggle();
   bindCampaignTabs();
+  bindCrpTooltip();
+  window.addEventListener("resize", repositionOpenCrpTooltips, { once: true });
 
   if (window.location.hash) {
     const targetId = window.location.hash.slice(1);
