@@ -1079,6 +1079,51 @@ const templateSections = {
   ],
 };
 
+const moduleIdToFn = {
+  timeline: renderTimeline,
+  prize: renderPrizeSection,
+  rules: renderRulesSection,
+  "campaign-tasks": renderCampaignTasksSection,
+  "collect-task-list": renderCollectTaskListVariantSection,
+  "collect-single-reward": renderCollectSingleRewardVariantSection,
+  "collect-tier-reward": renderCollectTierRewardVariantSection,
+  collect: renderCollectVariantSection,
+  "collect-rich": renderCollectRichSection,
+  "how-it-works": renderHowItWorksSection,
+  video: renderVideoSection,
+  inspiration: renderInspirationSection,
+  "activity-anchor": renderActivityAnchor,
+  "other-activities": renderOtherActivities,
+  "work-review": renderWorkReviewSection,
+  guidance: renderGuidanceSection,
+  tips: renderTipsSection,
+};
+
+function resolveOverrideEntry(entry) {
+  if (typeof entry === "string") {
+    if (entry.startsWith("custom-")) {
+      return () => window.AOC_CUSTOM_MODULES?.[entry] || "";
+    }
+    const fn = moduleIdToFn[entry];
+    return fn ? () => fn() : () => "";
+  }
+  if (entry && typeof entry === "object" && entry.id) {
+    if (entry.id.startsWith("custom-")) {
+      return () => window.AOC_CUSTOM_MODULES?.[entry.id] || "";
+    }
+    const fn = moduleIdToFn[entry.id];
+    if (!fn) return () => "";
+    const args = entry.props ? Object.values(entry.props) : [];
+    return () => fn(...args);
+  }
+  return () => "";
+}
+
+function applyOverrideSections() {
+  if (!Array.isArray(window.AOC_OVERRIDE_SECTIONS)) return;
+  templateSections[activeTemplate] = window.AOC_OVERRIDE_SECTIONS.map(resolveOverrideEntry);
+}
+
 function bindNavigationBar() {
   const navigationBar = document.querySelector(".navigation-bar");
   const updateNavigationBar = () => {
@@ -1199,6 +1244,7 @@ function positionCrpTooltip(button, tooltip) {
 }
 
 function renderApp() {
+  applyOverrideSections();
   const sections = templateSections[activeTemplate].map((section) => section()).join("");
   app.innerHTML = renderShell(sections);
   document.documentElement.dataset.template = activeTemplate;
