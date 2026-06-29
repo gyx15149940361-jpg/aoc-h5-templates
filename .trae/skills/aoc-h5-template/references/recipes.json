@@ -1,0 +1,42 @@
+{
+  "$schema": "recipe-manifest",
+  "version": "1.0.0",
+  "notes": "5 套预设配方，对应源 script.js 中 templateSections 的 5 个 key。modules 顺序即页面从上到下的渲染顺序。",
+  "recipes": [
+    {
+      "id": "base",
+      "label": "通用基础版",
+      "scenario": "标准 AOC 活动主页，含奖品 / 规则 / 灵感",
+      "modules": ["timeline", "prize", "rules", { "id": "video", "props": { "title": "Examples & Inspiration" } }, "inspiration", "activity-anchor", "other-activities"]
+    },
+    {
+      "id": "4802",
+      "label": "Campaign 任务型",
+      "scenario": "带具体任务列表的 Campaign，强调任务完成度",
+      "modules": ["timeline", "prize", "rules", "campaign-tasks", { "id": "video", "props": { "title": "Post to Win Rewards" } }, "activity-anchor", "other-activities"]
+    },
+    {
+      "id": "5737",
+      "label": "Collect 收集玩法",
+      "scenario": "进度收集 / 阶梯奖励 / 多档解锁",
+      "variants": {
+        "tasklist": "多任务进度条形式",
+        "single": "单一终极奖品",
+        "tier": "阶梯奖励解锁"
+      },
+      "modules": ["timeline", "prize", "rules", "collect", { "id": "video", "props": { "title": "Post to Win Rewards" } }, "activity-anchor", "other-activities"]
+    },
+    {
+      "id": "6222",
+      "label": "How-it-works 玩法解释型",
+      "scenario": "新玩法/复杂规则，重在步骤说明",
+      "modules": ["timeline", "how-it-works", "rules", { "id": "video", "props": { "title": "Post to Win Rewards" } }, "other-activities"]
+    },
+    {
+      "id": "3425",
+      "label": "CRP 审核型",
+      "scenario": "Creator Reward Plan 类，含作品审核状态 + 创作指南 + Tips",
+      "modules": ["rules", "collect-rich", "work-review", "guidance", "tips", "activity-anchor", "other-activities"]
+    }
+  ]
+}

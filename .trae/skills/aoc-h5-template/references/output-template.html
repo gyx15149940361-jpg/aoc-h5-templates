@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="{{LANG}}">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{TITLE}}</title>
+    <link rel="stylesheet" href="https://raw.githubusercontent.com/gyx15149940361-jpg/aoc-h5-templates/main/styles.css" />
+  </head>
+  <body>
+    <div id="app" data-template="{{BASE_TEMPLATE}}"{{DATA_ATTRS}} aria-live="polite"></div>
+
+    <!-- AOC_OVERRIDE: 配方与自定义模块。删除任何键即恢复 script.js 默认行为。 -->
+    <script>
+      window.AOC_OVERRIDE_SECTIONS = {{SECTIONS_JSON}};
+      window.AOC_CUSTOM_MODULES = {{CUSTOM_MODULES_JSON}};
+    </script>
+    <script src="https://raw.githubusercontent.com/gyx15149940361-jpg/aoc-h5-templates/main/script.js"></script>
+  </body>
+</html>

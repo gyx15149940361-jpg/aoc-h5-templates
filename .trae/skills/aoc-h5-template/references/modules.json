@@ -1,0 +1,43 @@
+{
+  "$schema": "module-manifest",
+  "version": "1.2.0",
+  "language": "en",
+  "languagePolicy": "Internal text strings inside each render* function are hard-coded in English and MUST NOT be translated or rewritten by the skill. Default lang attribute on output HTML must be \"en\".",
+  "notes": "每个模块对应 script.js 里的一个 render* 函数。id 用 kebab-case。editableProps 采用字段级白名单，不在白名单内的字符串一律锁定。",
+  "modules": [
+    { "id": "timeline", "render": "renderTimeline", "name": "活动时间线", "usedIn": ["base","4802","5737","6222"], "purpose": "倒计时/活动周期", "editable": "partial", "editableProps": [{ "name": "periods", "type": "array", "itemShape": { "dateRange": "string" }, "fixedLength": 3, "notes": "Exactly 3 phases. Only the 3 date spans are editable; phase labels are locked." }] },
+    { "id": "prize", "render": "renderPrizeSection", "name": "奖品区", "usedIn": ["base","4802","5737","6222"], "purpose": "奖项列表 + 奖品卡片 + 展开折叠", "editable": "partial", "editableProps": [{ "name": "prizes", "type": "array", "itemShape": { "rankOrThreshold": "string", "rewardNameOrAmount": "string", "image": "string?" }, "notes": "Editable list content and count. When count > 7, generator must auto-collapse overflow and keep See more behavior. Reward art should first resolve from configured assets by reward name + region/country." }] },
+    { "id": "rules", "render": "renderRulesSection", "name": "规则区", "usedIn": ["base","4802","5737","6222","3425"], "purpose": "活动规则与条款", "editable": "partial", "editableProps": [{ "name": "items", "type": "array", "itemType": "string", "notes": "Full rule lines editable. #hashtag tokens should be auto-highlighted." }] },
+    { "id": "campaign-tasks", "render": "renderCampaignTasksSection", "name": "Campaign 任务", "usedIn": ["4802"], "purpose": "Campaign 玩法专属任务列表", "editable": false, "editableProps": [] },
+    { "id": "collect-task-list", "render": "renderCollectTaskListVariantSection", "name": "Collect-任务列表型", "usedIn": ["5737:variant=tasklist"], "purpose": "多任务进度条", "editable": false, "editableProps": [] },
+    { "id": "collect-single-reward", "render": "renderCollectSingleRewardVariantSection", "name": "Collect-单一奖励型", "usedIn": ["5737:variant=single"], "purpose": "单奖品聚焦展示", "editable": false, "editableProps": [] },
+    { "id": "collect-tier-reward", "render": "renderCollectTierRewardVariantSection", "name": "Collect-阶梯奖励型", "usedIn": ["5737:variant=tier"], "purpose": "梯度奖励解锁", "editable": "partial", "editableProps": [{ "name": "highlightAmount", "type": "string", "notes": "Only the red amount inside 'UP TO ... USD PRIZES !' is editable." }, { "name": "tierRewards", "type": "array", "notes": "Reward cards support editable count and reward content." }, { "name": "milestones", "type": "array", "notes": "Milestone count and thresholds are editable." }, { "name": "tasks", "type": "array", "notes": "Task copy is editable. Task type must come from a fixed enum, and button behavior/text should derive from that enum." }] },
+    { "id": "collect", "render": "renderCollectVariantSection", "name": "Collect 玩法分发", "usedIn": ["5737"], "purpose": "根据 variant 路由到 collect-* 子模块", "editable": false, "editableProps": [] },
+    { "id": "collect-rich", "render": "renderCollectRichSection", "name": "Collect-富展示", "usedIn": ["3425"], "purpose": "复杂收集型展示，含解锁/锁定状态", "editable": false, "editableProps": [] },
+    { "id": "how-it-works", "render": "renderHowItWorksSection", "name": "玩法说明", "usedIn": ["6222"], "purpose": "步骤化玩法解释", "editable": false, "editableProps": [] },
+    { "id": "video", "render": "renderVideoSection", "name": "示例视频区", "usedIn": ["base","4802","5737","6222"], "purpose": "示例视频卡片", "editable": "partial", "editableProps": [{ "name": "title", "type": "string", "default": "Post to Win Rewards" }, { "name": "videoIds", "type": "array", "itemType": "string", "notes": "video-card articles should be hydrated from a business video API by video IDs, not hand-written static mock text." }] },
+    { "id": "inspiration", "render": "renderInspirationSection", "name": "灵感卡片", "usedIn": ["base"], "purpose": "横滑灵感卡", "editable": false, "editableProps": [] },
+    { "id": "activity-anchor", "render": "renderActivityAnchor", "name": "活动入口锚点", "usedIn": ["base","4802","5737","3425"], "purpose": "页面内跳转锚点条", "editable": false, "editableProps": [] },
+    { "id": "other-activities", "render": "renderOtherActivities", "name": "其他活动", "usedIn": ["base","4802","5737","6222","3425"], "purpose": "底部相关活动入口", "editable": "partial", "editableProps": [{ "name": "banners", "type": "array", "notes": "Only banner asset and click target are editable." }] },
+    { "id": "work-review", "render": "renderWorkReviewSection", "name": "作品审核区", "usedIn": ["3425"], "purpose": "CRP 类活动的审核状态展示", "editable": false, "editableProps": [] },
+    { "id": "guidance", "render": "renderGuidanceSection", "name": "创作指南", "usedIn": ["3425"], "purpose": "图文创作指引", "editable": false, "editableProps": [] },
+    { "id": "tips", "render": "renderTipsSection", "name": "Tips", "usedIn": ["3425"], "purpose": "提示语列表", "editable": false, "editableProps": [] }
+  ],
+  "shellModules": [
+    { "id": "shell", "render": "renderShell", "name": "页面外壳", "purpose": "导航栏 + 内容容器，不可单独使用，由 script.js 自动包裹" },
+    { "id": "navigation", "render": "renderNavigation", "name": "顶部导航", "purpose": "标题 + 返回按钮，由 shell 调用" },
+    { "id": "status-bar", "render": "renderStatusBar", "name": "状态栏", "purpose": "iOS 状态栏拟物，由 shell 调用" }
+  ],
+  "subComponents": [
+    "renderPrizeCard", "renderRewardArt", "renderProfileFrameArt", "renderRewardTask",
+    "renderTaskProgress", "renderVideoCard", "renderMiniVideoThumb", "renderAvatar",
+    "renderLockedRewardTile", "renderTinyPostButton", "renderPanelCopy",
+    "renderReviewEmptyState", "renderFloor"
+  ],
+  "rules": {
+    "doNotTranslate": "Skill MUST NOT translate any built-in English string that is not explicitly opened in editableProps.",
+    "doNotRewriteAsCustom": "Skill MUST NOT rewrite a built-in module as a custom-* module to bypass field-level editableProps limits.",
+    "customModuleIdPrefix": "custom-",
+    "outputLangAttribute": "en"
+  }
+}
