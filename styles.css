@@ -1587,17 +1587,12 @@ button {
 }
 
 .cv-art--done::after {
-  background: #fe2c55;
+  background: #e3e3e3 url("./assets/icon-tick-fill.svg") center / 10px 10px no-repeat;
   border-radius: 0 8px 0 8px;
-  color: #fff;
-  content: "✓";
-  font-size: 11px;
-  font-weight: 700;
+  content: "";
   height: 18px;
-  line-height: 18px;
   position: absolute;
   right: 0;
-  text-align: center;
   top: 0;
   width: 18px;
 }
@@ -1640,7 +1635,7 @@ button {
 .cv-progress-text em {
   color: #fe2c55;
   font-style: normal;
-  font-weight: 400;
+  font-weight: 600;
 }
 
 .tiny-post--done {

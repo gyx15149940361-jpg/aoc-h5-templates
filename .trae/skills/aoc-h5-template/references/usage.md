@@ -1,5 +1,27 @@
 # Usage Guide
 
+## Recipe 选择与默认继承（HARD RULE）
+
+生成任何页面前，都必须先根据用户意图选 1 套最贴近的 recipe，再在该 recipe 上做 patch。
+
+推荐映射：
+- 提到 `collect` / 收集任务 / 阶梯奖励 / 单奖品 / 多任务解锁 → 选 `5737`
+- 提到 `campaign` / 任务型活动 / 排行 / 单个活动任务 → 选 `4802`
+- 提到 `crp` / review / 审核 / creator rewards plan → 选 `3425`
+- 提到玩法说明 / how it works / 步骤解释 → 选 `6222`
+- 其余未命中明确玩法时 → 选 `base`
+
+继承规则：
+- `SECTIONS_JSON` 必须以 recipe 里的完整 `modules` 数组为基线。
+- 用户只提“改奖励”“改任务”“改规则”“换标题”时，只修改对应模块内容或字段，不得把未提及的默认模块省略。
+- 只有当用户明确说“删除 / 去掉 / 替换 / 不要某模块”时，才能移除或替换 recipe 默认模块。
+
+例：
+- 用户说“做一个 collect 页面，奖励改成 3 档，任务改成足球主题”
+- 应选择 `5737`，并保留默认模块：
+  `timeline` / `prize` / `rules` / `collect` / `video` / `activity-anchor` / `other-activities`
+- 不能只输出 `prize` + `collect`
+
 ## Patch 指令（自然语言 → 操作）
 
 | 用户说法示例 | 操作 |
@@ -85,14 +107,15 @@
 }
 ```
 
-key 必须以 `custom-` 开头，value 是完整 HTML 字符串。引用图片走 `https://raw.githubusercontent.com/.../assets/...` 或用户外链。
+key 必须以 `custom-` 开头，value 是完整 HTML 字符串。引用图片走 `https://cdn.jsdelivr.net/gh/gyx15149940361-jpg/aoc-h5-templates@main/assets/...` 或用户外链。
 
 ## 生成产物的固定写法
 
 1. 选择最贴近的 base recipe（recipes.json）作为 `data-template` 值，让 script.js 内部资源加载逻辑正常工作（比如 reward 图片路径、CRP 状态等）。
-2. 把最终模块顺序写到 `window.AOC_OVERRIDE_SECTIONS`。脚本检测到该全局变量时会跳过默认 `templateSections[activeTemplate]`。
-3. 自定义模块的 HTML 挂到 `window.AOC_CUSTOM_MODULES`。
-4. URL 参数兼容：`?variant=tasklist|single|tier` 用于切换 collect-* 子模块；`?crp=earning|empty|locked` 用于切换 CRP 状态；`?review=empty` 用于审核空态。这些仍然可用，无需 patch。
+2. 先取出该 recipe 的完整默认模块顺序，再在此基础上应用用户 patch，得到最终 `SECTIONS_JSON`。
+3. 把最终模块顺序写到 `window.AOC_OVERRIDE_SECTIONS`。脚本检测到该全局变量时会跳过默认 `templateSections[activeTemplate]`。
+4. 自定义模块的 HTML 挂到 `window.AOC_CUSTOM_MODULES`。
+5. URL 参数兼容：`?variant=tasklist|single|tier` 用于切换 collect-* 子模块；`?crp=earning|empty|locked` 用于切换 CRP 状态；`?review=empty` 用于审核空态。这些仍然可用，无需 patch。
 
 ## 例：用户说"基于 collect 模板做一个，去掉 video，再加 tips"
 
@@ -126,7 +149,7 @@ SECTIONS_JSON：
 - `window.AOC_CUSTOM_MODULES`：对象，key 为 `custom-<slug>`，value 为完整 HTML 字符串
 - 模块 id → render 函数映射表（`moduleIdToFn`）已写死在 script.js 中，与 [modules.json](./modules.json) 保持一致
 
-只要在 `<script src=".../script.js">` 之前的 inline `<script>` 里设置这两个全局变量，`renderApp()` 会在首次渲染前自动应用覆盖。无需用户改动 repo。
+只要在 `<script src="https://cdn.jsdelivr.net/gh/gyx15149940361-jpg/aoc-h5-templates@main/script.js">` 之前的 inline `<script>` 里设置这两个全局变量，`renderApp()` 会在首次渲染前自动应用覆盖。无需用户改动 repo。
 
 数组元素的两种写法：
 

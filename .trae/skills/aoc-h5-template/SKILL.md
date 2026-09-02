@@ -1,23 +1,25 @@
 ---
 name: aoc-h5-template
 description: 一句话生成基于 AOC H5 模板库的营销落地页。支持 5 套预设模板 + 30+ 视觉区块模块的自由替换/删除/新增，可调用 figma MCP 把 Figma 设计转成新模块。当用户提到"H5 模板""AOC 模板""H5 营销页""H5 落地页""模板组装""替换/新增/删除 H5 模块"时触发。
+metadata:
+  version: "1.0.0"
 ---
 
 # AOC H5 Template Skill
 
-为 AOC 营销活动一键生成 H5 落地页。底层资源（CSS、JS、图片、字体）全部通过 GitHub raw URL 引用，Skill 本身只承载模块清单、配方和组装规则，体积保持在 30KB 以内。
+为 AOC 营销活动一键生成 H5 落地页。底层资源（CSS、JS、图片、字体）全部通过可直接加载的发布地址引用，Skill 本身只承载模块清单、配方和组装规则，体积保持在 30KB 以内。
 
-## 1. 资源根 URL（不要修改）
+## 1. 资源根 URL
 
 ```
-CDN_BASE = https://raw.githubusercontent.com/gyx15149940361-jpg/aoc-h5-templates/main
+CDN_BASE = https://cdn.jsdelivr.net/gh/gyx15149940361-jpg/aoc-h5-templates@main
 ```
 
 - 样式表：`${CDN_BASE}/styles.css`
 - 渲染脚本：`${CDN_BASE}/script.js`
 - 资源目录：`${CDN_BASE}/assets/...`
 
-所有生成的 H5 必须通过该根 URL 引用资源，禁止把 CSS/JS/图片复制进生成产物。
+所有生成的 H5 必须通过该发布地址引用资源，禁止把 CSS/JS/图片复制进生成产物。
 
 ## 2. 工作流（必须按顺序执行）
 
@@ -33,6 +35,12 @@ CDN_BASE = https://raw.githubusercontent.com/gyx15149940361-jpg/aoc-h5-templates
 - 用户可要求替换、删除、新增模块。读取 [references/modules.json](./references/modules.json) 拿到模块清单（每条含 id / name / 用途 / 默认顺序），按需调整配方。
 - 增删替换规则见 [references/usage.md](./references/usage.md) 的「Patch 指令」章节。
 
+**默认继承规则（HARD RULE）**
+- 每次生成都必须先确定 1 个 recipe id，再从该 recipe 的完整 `modules` 数组出发生成页面。
+- 用户如果只说“改奖励”“改任务”“改规则”“做一个 collect/campaign/CRP 页面”，这表示**在已选 recipe 上修改对应模块**，不是从零拼一个只包含被提及模块的页面。
+- 除非用户明确说“删除 / 去掉 / 替换”某个模块，否则 recipe 自带模块必须保留。
+- 例如选择 `5737`（Collect）后，即使用户只提奖励和任务，默认仍应保留 `timeline`、`activity-anchor`、`other-activities`；选择 `3425`（CRP）后则默认保留 `work-review`、`guidance`、`tips` 等 recipe 内置模块。
+
 第 4 步 — **如需 Figma 新模块**
 - 当用户提供 Figma 链接或要求"按设计稿做一个模块"时，按 [references/figma-integration.md](./references/figma-integration.md) 流程：
   1. 调用 figma MCP 的 `get_design_context` + `get_screenshot`
@@ -47,7 +55,7 @@ CDN_BASE = https://raw.githubusercontent.com/gyx15149940361-jpg/aoc-h5-templates
 
 第 6 步 — **交付**
 - 用 file:/// 链接告知用户文件路径
-- 列出最终采用的模块顺序、是否包含 Figma 新模块、CDN 资源出处
+- 列出最终采用的模块顺序、是否包含 Figma 新模块、资源发布地址出处
 - 提示用户用浏览器直接打开即可预览（无须本地服务器）
 
 ## 3. 模块粒度
@@ -98,7 +106,7 @@ CDN_BASE = https://raw.githubusercontent.com/gyx15149940361-jpg/aoc-h5-templates
 ## 6. 边界
 
 - 仅支持 H5 单页输出，不做多页路由
-- 仅支持 GitHub raw URL 作为资源源；如果用户要换 CDN，提示其先上传同结构资产
+- 仅支持发布地址作为资源源；默认使用 jsDelivr 的 GitHub 发布入口。如果用户要换 CDN，提示其先上传同结构资产
 - 修改底层 styles.css / script.js 不在 Skill 职责内，超出范围时引导用户直接在源 repo 改
 
 详细字段、API、示例见 references 目录的 4 个文件。
