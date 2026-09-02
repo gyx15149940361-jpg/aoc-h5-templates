@@ -13,7 +13,7 @@
       "id": "4802",
       "label": "Campaign 任务型",
       "scenario": "带具体任务列表的 Campaign，强调任务完成度",
-      "modules": ["timeline", "prize", "rules", "campaign-tasks", { "id": "video", "props": { "title": "Post to Win Rewards" } }, "activity-anchor", "other-activities"]
+      "modules": ["timeline", "prize", "rules", "campaign-tasks", { "id": "video", "props": { "title": "Examples & Inspiration" } }, "activity-anchor", "other-activities"]
     },
     {
       "id": "5737",
@@ -24,13 +24,13 @@
         "single": "单一终极奖品",
         "tier": "阶梯奖励解锁"
       },
-      "modules": ["timeline", "prize", "rules", "collect", { "id": "video", "props": { "title": "Post to Win Rewards" } }, "activity-anchor", "other-activities"]
+      "modules": ["timeline", "prize", "rules", "collect", { "id": "video", "props": { "title": "Examples & Inspiration" } }, "activity-anchor", "other-activities"]
     },
     {
       "id": "6222",
       "label": "How-it-works 玩法解释型",
       "scenario": "新玩法/复杂规则，重在步骤说明",
-      "modules": ["timeline", "how-it-works", "rules", { "id": "video", "props": { "title": "Post to Win Rewards" } }, "other-activities"]
+      "modules": ["timeline", "how-it-works", "rules", { "id": "video", "props": { "title": "Examples & Inspiration" } }, "other-activities"]
     },
     {
       "id": "3425",

@@ -146,11 +146,28 @@ function renderNavigation() {
   `;
 }
 
+function renderKvContent() {
+  return `
+    <div class="kv-content">
+      <div class="kv-title">
+        <p>${t("kv.title", "Placeholder text for the title")}</p>
+        <h1>${t("kv.hashtag", "#HASHTAG")}</h1>
+      </div>
+      <p class="kv-description">
+        ${t("kv.descriptionPrefix", "Sign up and post videos for a chance to win up to ")}
+        <strong>${t("kv.rewardAmount", "$2,000")}</strong>
+        ${t("kv.descriptionSuffix", " in prizes!")}
+      </p>
+    </div>
+  `;
+}
+
 function renderShell(content) {
   return `
     <div class="page-shell template-${activeTemplate}" data-template="${activeTemplate}">
       <header class="kv" aria-label="${t("shell.heroAria", "Campaign hero")}">
         ${renderNavigation()}
+        ${renderKvContent()}
       </header>
       <main class="slot">${content}</main>
       <footer class="bottom-cta">
@@ -297,7 +314,7 @@ function renderCampaignTasksSection() {
   const campaign = getContent("campaign", { tabs: [], tasks: [] });
 
   return renderFloor(
-    t("campaign.floorTitle", "Post to Win Rewards"),
+    t("campaign.floorTitle", "Examples & Inspiration"),
     `
       <div class="campaign-shell">
         <input class="campaign-toggle" id="${toggleId}" type="checkbox" aria-label="Toggle more tasks" />
@@ -657,10 +674,10 @@ function renderVideoCard(card) {
   `;
 }
 
-function renderVideoSection(title = "Post to Win Rewards") {
+function renderVideoSection(title = "Examples & Inspiration") {
   const videoCards = getContent("video.cards", []);
   return renderFloor(
-    title || t("video.defaultTitle", "Post to Win Rewards"),
+    title || t("video.defaultTitle", "Examples & Inspiration"),
     `
       <div class="panel examples-panel">
         ${renderPanelCopy(t("video.panelCopy", "Check out the following creators making high-quality #Cartok content."))}
@@ -843,7 +860,7 @@ const templateSections = {
     renderPrizeSection,
     renderRulesSection,
     renderCampaignTasksSection,
-    () => renderVideoSection(t("video.defaultTitle", "Post to Win Rewards")),
+    () => renderVideoSection(t("video.defaultTitle", "Examples & Inspiration")),
     renderActivityAnchor,
     renderOtherActivities,
   ],
@@ -852,7 +869,7 @@ const templateSections = {
     renderPrizeSection,
     renderRulesSection,
     renderCollectVariantSection,
-    () => renderVideoSection(t("video.defaultTitle", "Post to Win Rewards")),
+    () => renderVideoSection(t("video.defaultTitle", "Examples & Inspiration")),
     renderActivityAnchor,
     renderOtherActivities,
   ],
@@ -860,7 +877,7 @@ const templateSections = {
     renderTimeline,
     renderHowItWorksSection,
     renderRulesSection,
-    () => renderVideoSection(t("video.defaultTitle", "Post to Win Rewards")),
+    () => renderVideoSection(t("video.defaultTitle", "Examples & Inspiration")),
     renderOtherActivities,
   ],
   "3425": [
